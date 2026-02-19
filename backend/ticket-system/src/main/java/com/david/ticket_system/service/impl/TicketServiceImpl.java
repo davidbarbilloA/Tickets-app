@@ -2,6 +2,7 @@ package com.david.ticket_system.service.impl;
 
 import com.david.ticket_system.domain.entity.Ticket;
 import com.david.ticket_system.domain.enums.TicketStatus;
+import com.david.ticket_system.domain.exception.ResourceNotFoundException;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.repository.TicketRepository;
@@ -50,10 +51,37 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public TicketResponseDTO getTicketById(Long id){
+    public TicketResponseDTO getTicketById(Long id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
+                );
 
         return mapToResponse(ticket);
+    }
+
+    @Override
+    public TicketResponseDTO updateTicket(Long id, TicketRequestDTO request){
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
+                );
+        ticket.setTitle(request.title());
+        ticket.setDescription(request.description());
+
+        Ticket updated = ticketRepository.save(ticket);
+
+        return mapToResponse(updated);
+    }
+
+    @Override
+    public void deleteTicket(Long id){
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(()->
+                    new ResourceNotFoundException("Ticket con id " + id + " no encontrado" )
+                );
+
+        ticketRepository.delete((ticket));
     }
 }
