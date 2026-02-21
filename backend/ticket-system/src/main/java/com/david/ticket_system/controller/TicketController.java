@@ -1,5 +1,7 @@
 package com.david.ticket_system.controller;
 
+import com.david.ticket_system.domain.entity.Ticket;
+import com.david.ticket_system.dto.TicketRequest;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.service.TicketService;

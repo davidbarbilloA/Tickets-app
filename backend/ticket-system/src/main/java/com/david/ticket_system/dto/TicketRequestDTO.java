@@ -1,5 +1,6 @@
 package com.david.ticket_system.dto;
 
+import com.david.ticket_system.domain.enums.TicketPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -10,5 +11,9 @@ public record TicketRequestDTO(
         String title,
         @NotBlank(message = "La descripción es obligatoria")
         @Size(min = 5, max = 1000, message = "La descripción debe tener entre 5 y 1000 caracteres")
-        String description
+        String description,
+        TicketPriority priority,
+        Long creatorId,
+        Long assignedToId
+
 ) {}

@@ -1,9 +1,9 @@
 package com.david.ticket_system.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
-import javax.management.relation.Role;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -28,6 +28,14 @@ public class User {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "creator")
+    @JsonIgnore
+    private List<Ticket> createdTickets;
+
+    @OneToMany(mappedBy = "assignedTo")
+    @JsonIgnore
+    private List<Ticket> assignedTickets;
 
     public Long getId() {
         return id;
