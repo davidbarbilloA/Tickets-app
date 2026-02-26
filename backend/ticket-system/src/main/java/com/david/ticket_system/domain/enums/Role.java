@@ -1,4 +1,4 @@
-package com.david.ticket_system.domain.entity;
+package com.david.ticket_system.domain.enums;
 
 public enum Role {
     USER,

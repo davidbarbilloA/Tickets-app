@@ -2,19 +2,20 @@ package com.david.ticket_system.service.impl;
 
 import com.david.ticket_system.domain.entity.Ticket;
 import com.david.ticket_system.domain.entity.User;
-import com.david.ticket_system.domain.enums.TicketPriority;
+import com.david.ticket_system.domain.enums.Role;
 import com.david.ticket_system.domain.enums.TicketStatus;
 import com.david.ticket_system.domain.exception.ResourceNotFoundException;
-import com.david.ticket_system.dto.TicketRequest;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.repository.TicketRepository;
 import com.david.ticket_system.repository.UserRepository;
 import com.david.ticket_system.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -25,25 +26,30 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Override
-    public TicketResponseDTO createTicket(TicketRequestDTO request) {
+    public TicketResponseDTO createTicket(TicketRequestDTO request, Authentication authentication) {
 
-        User creator = userRepository.findById(request.creatorId())
+        String email = authentication.getName();
+
+        User creator = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Usuario creador no encontrado"));
+                        new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        User assigned = null;
+        // Buscar técnicos
+        List<User> technicians = userRepository.findByRole(Role.TECH);
 
-        if (request.assignedToId() != null) {
-            assigned = userRepository.findById(request.assignedToId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("Usuario asignado no encontrado"));
+        if (technicians.isEmpty()) {
+            throw new RuntimeException("No hay técnicos disponibles");
         }
+
+        // Asignar técnico aleatorio
+        Random random = new Random();
+        User assigned = technicians.get(random.nextInt(technicians.size()));
 
         Ticket ticket = Ticket.builder()
                 .title(request.title())
                 .description(request.description())
                 .status(TicketStatus.OPEN)
-                .priority(request.priority()) // si ya es enum
+                .priority(request.priority())
                 .creator(creator)
                 .assignedTo(assigned)
                 .build();
@@ -88,8 +94,10 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
                 );
+
         ticket.setTitle(request.title());
         ticket.setDescription(request.description());
+        ticket.setPriority(request.priority());
 
         Ticket updated = ticketRepository.save(ticket);
 
@@ -105,27 +113,19 @@ public class TicketServiceImpl implements TicketService {
 
         ticketRepository.delete((ticket));
     }
-//    @Override
-//    public Ticket create(TicketRequest request) {
-//
-//        User creator = userRepository.findById(request.getCreatorId())
-//                .orElseThrow(() -> new RuntimeException("Creator not found"));
-//
-//        User assigned = null;
-//
-//        if (request.getAssignedToId() != null) {
-//            assigned = userRepository.findById(request.getAssignedToId())
-//                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
-//        }
-//
-//        Ticket ticket = new Ticket();
-//        ticket.setTitle(request.getTitle());
-//        ticket.setDescription(request.getDescription());
-//        ticket.setStatus(TicketStatus.valueOf(request.getStatus()));
-//        ticket.setPriority(request.getPriority());
-//        ticket.setCreator(creator);
-//        ticket.setAssignedTo(assigned);
-//
-//        return ticketRepository.save(ticket);
-//    }
+
+    @Override
+    public TicketResponseDTO updateStatus(Long id, TicketStatus status) {
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
+                );
+
+        ticket.setStatus(status);
+
+        Ticket updated = ticketRepository.save(ticket);
+
+        return mapToResponse(updated);
+    }
 }

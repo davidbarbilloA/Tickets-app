@@ -1,13 +1,12 @@
 package com.david.ticket_system.controller;
 
-import com.david.ticket_system.domain.entity.Ticket;
-import com.david.ticket_system.dto.TicketRequest;
+import com.david.ticket_system.domain.enums.TicketStatus;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,10 +36,10 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<TicketResponseDTO> create(
-            @Valid @RequestBody TicketRequestDTO request){
-        TicketResponseDTO response = ticketService.createTicket(request);
+            @RequestBody TicketRequestDTO request,
+            Authentication authentication) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.ok(ticketService.createTicket(request, authentication));
     }
 
     @PutMapping("/{id}")
@@ -59,5 +58,13 @@ public class TicketController {
         ticketService.deleteTicket(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TicketResponseDTO> updateStatus(
+            @PathVariable Long id,
+            @RequestBody TicketStatus status
+    ) {
+        return ResponseEntity.ok(ticketService.updateStatus(id, status));
     }
 }

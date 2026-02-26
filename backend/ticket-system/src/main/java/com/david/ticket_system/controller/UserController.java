@@ -2,6 +2,7 @@ package com.david.ticket_system.controller;
 
 import com.david.ticket_system.domain.entity.User;
 import com.david.ticket_system.service.UserService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,5 +45,10 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+    }
+
+    @GetMapping("/api/test")
+    public String test(Authentication authentication) {
+        return "Usuario autenticado: " + authentication.getName();
     }
 }
