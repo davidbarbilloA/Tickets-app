@@ -2,8 +2,10 @@ package com.david.ticket_system.service.impl;
 
 import com.david.ticket_system.domain.entity.User;
 import com.david.ticket_system.repository.UserRepository;
+import com.david.ticket_system.repository.TicketRepository;
 import com.david.ticket_system.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -11,9 +13,12 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository,
+            TicketRepository ticketRepository) {
         this.userRepository = userRepository;
+        this.ticketRepository = ticketRepository;
     }
 
     @Override
@@ -46,7 +51,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Desvincular tickets donde el usuario es el técnico asignado
+        List<com.david.ticket_system.domain.entity.Ticket> assigned = ticketRepository.findAll()
+                .stream()
+                .filter(t -> t.getAssignedTo() != null && t.getAssignedTo().getId().equals(id))
+                .toList();
+
+        assigned.forEach(t -> t.setAssignedTo(null));
+        ticketRepository.saveAll(assigned);
+
+        // 2. Eliminar tickets creados por el usuario
+        List<com.david.ticket_system.domain.entity.Ticket> created = ticketRepository.findAll()
+                .stream()
+                .filter(t -> t.getCreator() != null && t.getCreator().getId().equals(id))
+                .toList();
+
+        ticketRepository.deleteAll(created);
+
+        // 3. Eliminar el usuario
+        userRepository.delete(user);
     }
 }

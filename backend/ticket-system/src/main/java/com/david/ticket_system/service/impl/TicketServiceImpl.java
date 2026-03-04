@@ -21,111 +21,106 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
 
-    private final TicketRepository ticketRepository;
-    private final UserRepository userRepository;
+        private final TicketRepository ticketRepository;
+        private final UserRepository userRepository;
 
+        @Override
+        public TicketResponseDTO createTicket(TicketRequestDTO request, Authentication authentication) {
 
-    @Override
-    public TicketResponseDTO createTicket(TicketRequestDTO request, Authentication authentication) {
+                String email = authentication.getName();
 
-        String email = authentication.getName();
+                User creator = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        User creator = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Usuario autenticado no encontrado"));
+                // Buscar técnicos
+                List<User> technicians = userRepository.findByRole(Role.TECH);
 
-        // Buscar técnicos
-        List<User> technicians = userRepository.findByRole(Role.TECH);
+                if (technicians.isEmpty()) {
+                        throw new RuntimeException("No hay técnicos disponibles");
+                }
 
-        if (technicians.isEmpty()) {
-            throw new RuntimeException("No hay técnicos disponibles");
+                // Asignar técnico aleatorio
+                Random random = new Random();
+                User assigned = technicians.get(random.nextInt(technicians.size()));
+
+                Ticket ticket = Ticket.builder()
+                                .title(request.title())
+                                .description(request.description())
+                                .status(TicketStatus.OPEN)
+                                .priority(request.priority())
+                                .creator(creator)
+                                .assignedTo(assigned)
+                                .build();
+
+                Ticket saved = ticketRepository.save(ticket);
+
+                return mapToResponse(saved);
         }
 
-        // Asignar técnico aleatorio
-        Random random = new Random();
-        User assigned = technicians.get(random.nextInt(technicians.size()));
+        @Override
+        public List<TicketResponseDTO> getAllTickets() {
+                return ticketRepository.findAll()
+                                .stream()
+                                .map(this::mapToResponse)
+                                .toList();
+        }
 
-        Ticket ticket = Ticket.builder()
-                .title(request.title())
-                .description(request.description())
-                .status(TicketStatus.OPEN)
-                .priority(request.priority())
-                .creator(creator)
-                .assignedTo(assigned)
-                .build();
+        private TicketResponseDTO mapToResponse(Ticket ticket) {
+                return new TicketResponseDTO(
+                                ticket.getId(),
+                                ticket.getTitle(),
+                                ticket.getDescription(),
+                                ticket.getStatus(),
+                                ticket.getCreatedAt(),
+                                ticket.getCreator() != null ? ticket.getCreator().getEmail() : null,
+                                ticket.getAssignedTo() != null ? ticket.getAssignedTo().getEmail() : null);
+        }
 
-        Ticket saved = ticketRepository.save(ticket);
+        @Override
+        public TicketResponseDTO getTicketById(Long id) {
+                Ticket ticket = ticketRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Ticket con id " + id + " no encontrado"));
 
-        return mapToResponse(saved);
-    }
+                return mapToResponse(ticket);
+        }
 
-    @Override
-    public List<TicketResponseDTO> getAllTickets() {
-        return ticketRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
+        @Override
+        public TicketResponseDTO updateTicket(Long id, TicketRequestDTO request) {
 
-    private TicketResponseDTO mapToResponse(Ticket ticket) {
-        return new TicketResponseDTO(
-                ticket.getId(),
-                ticket.getTitle(),
-                ticket.getDescription(),
-                ticket.getStatus(),
-                ticket.getCreatedAt()
-        );
-    }
+                Ticket ticket = ticketRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Ticket con id " + id + " no encontrado"));
 
-    @Override
-    public TicketResponseDTO getTicketById(Long id) {
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
-                );
+                ticket.setTitle(request.title());
+                ticket.setDescription(request.description());
+                ticket.setPriority(request.priority());
 
-        return mapToResponse(ticket);
-    }
+                Ticket updated = ticketRepository.save(ticket);
 
-    @Override
-    public TicketResponseDTO updateTicket(Long id, TicketRequestDTO request){
+                return mapToResponse(updated);
+        }
 
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
-                );
+        @Override
+        public void deleteTicket(Long id) {
+                Ticket ticket = ticketRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Ticket con id " + id + " no encontrado"));
 
-        ticket.setTitle(request.title());
-        ticket.setDescription(request.description());
-        ticket.setPriority(request.priority());
+                ticketRepository.delete((ticket));
+        }
 
-        Ticket updated = ticketRepository.save(ticket);
+        @Override
+        public TicketResponseDTO updateStatus(Long id, TicketStatus status) {
 
-        return mapToResponse(updated);
-    }
+                Ticket ticket = ticketRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Ticket con id " + id + " no encontrado"));
 
-    @Override
-    public void deleteTicket(Long id){
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(()->
-                    new ResourceNotFoundException("Ticket con id " + id + " no encontrado" )
-                );
+                ticket.setStatus(status);
 
-        ticketRepository.delete((ticket));
-    }
+                Ticket updated = ticketRepository.save(ticket);
 
-    @Override
-    public TicketResponseDTO updateStatus(Long id, TicketStatus status) {
-
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Ticket con id " + id + " no encontrado")
-                );
-
-        ticket.setStatus(status);
-
-        Ticket updated = ticketRepository.save(ticket);
-
-        return mapToResponse(updated);
-    }
+                return mapToResponse(updated);
+        }
 }

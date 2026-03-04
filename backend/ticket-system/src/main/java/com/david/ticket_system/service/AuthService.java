@@ -1,6 +1,5 @@
 package com.david.ticket_system.service;
 
-
 import com.david.ticket_system.domain.entity.User;
 import com.david.ticket_system.dto.AuthRequest;
 import com.david.ticket_system.dto.AuthResponse;
@@ -18,17 +17,16 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthResponse login(AuthRequest request){
+    public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(()->new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())){
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }
 
         String token = jwtService.generateToken(user);
-
-        return new AuthResponse(token);
+        return new AuthResponse(token, user.getRole().name());
     }
 
     public void register(RegisterRequest request) {
