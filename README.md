@@ -1,62 +1,38 @@
-Ticket System – Support Management Platform
 
+# Hola, Soy David! 👋
+
+
+# Ticket System – Support Management Platform
 Sistema de gestión de tickets para registrar, asignar y resolver incidencias de soporte técnico entre usuarios y técnicos.
 
 El proyecto implementa una arquitectura full-stack con autenticación segura, control de roles y seguimiento del ciclo de vida de los tickets.
 
-🚀 Tecnologías
-Backend
 
-Spring Boot
+## Tech Stack
 
-Spring Security
+**Frontend:** React, TypeScript, Axios, Vite
 
-JWT Authentication
+**Backend:** Spring Boot, Spring Security, JWT Authentication, JPA/ Hibernate, REST API
 
-JPA / Hibernate
+**Base de Datos:** MySQL
+## Funcionalidades
 
-REST API
+- Autenticación y automatización mediante **JWT**
+- Sistema de roles **(ADMIN, TECH, USER)**
+- Creación y gestion de tickets
+- Asignación de tickets a técnicos
+- API REST segura
 
-Frontend
 
-React
-
-TypeScript
-
-Axios
-
-Vite
-
-Base de datos
-
-MySQL
-
-⚙️ Funcionalidades
-
-Autenticación y autorización mediante JWT
-
-Sistema de roles (ADMIN, TECH, USER)
-
-Creación y gestión de tickets
-
-Asignación de tickets a técnicos
-
-Seguimiento de estados de tickets
-
-Historial de cambios de estado
-
-Comentarios en tickets
-
-API REST segura
-
-🗂️ Arquitectura del proyecto
+## Arquitectura
+```text
 ticket-system
 │
 ├── backend
 │   ├── config
 │   ├── controllers
 │   ├── domain
-│   ├── exeptions
+│   ├── exceptions
 │   ├── mapper
 │   ├── services
 │   ├── repositories
@@ -66,99 +42,117 @@ ticket-system
     ├── components
     ├── pages
     └── services
-🗄️ Modelo de Base de Datos
+```
+## Modelo de Base de Datos
 
 Principales entidades del sistema:
 
-users
+- **users**
+- **tickets**
+- **ticket_history**
+- **ticket_comments**
 
-tickets
+Relaciones principales
 
-ticket_history
-
-ticket_comments
-
-Relaciones principales:
-
+```text
 User 1 ── * Tickets
 Ticket 1 ── * TicketHistory
 Ticket 1 ── * TicketComments
+```
 
-Estados de ticket:
+Estados de tickets:
 
+```text
 OPEN → IN_PROGRESS → RESOLVED → CLOSED
-🔐 Sistema de Roles
-Rol	Permisos
-USER	Crear tickets
-TECH	Gestionar y resolver tickets
-ADMIN	Administrar usuarios
-📡 API Endpoints
-Autenticación
-POST /api/auth/login
-POST /api/auth/register
-Tickets
-GET /api/tickets
-POST /api/tickets
-PUT /api/tickets/{id}
-DELETE /api/tickets/{id}
-Comentarios
-POST /api/tickets/{id}/comments
-GET /api/tickets/{id}/comments
-🖥️ Instalación y ejecución
-1. Clonar repositorio
-git clone https://github.com/tuusuario/ticket-system.git
-cd ticket-system
-2. Backend
+```
+## Sistema de Roles
 
-Requisitos
+| Rol               | Permisos                | 
+| :-----------------------| :------------------ | 
+| `USER`                    | `Crear tickets`|  
+| `TECH`                    | `Gestionar y resolver tickets`|
+| `ADMIN`                   | `Administrador total del sitio`|                           
+## API Endponts
 
-Java 17+
+#### Autenticación
 
-Maven
+```http
+  POST /api/auth/login
+  POST /api/auth/register
+```
 
-MySQL
+#### Tickets
+
+```http
+  GET /api/tickets
+  POST /api/tickets
+  PUT /api/tickets/{id}
+  DELETE /api/tickets/{id}
+```
+#### Comentarios
+
+```http
+  POST /api/tickets/{id}/comments
+  GET /api/tickets/{id}/comments
+```
+
+## Instalación y ejecución
+
+**1. Clonar el repositorio**
+
+```bash
+  git clone https://github.com/davidbarbilloA/Tickets-app.git
+  cd Tickets-app
+```
+## 
+**2. Backend:**
+
+    Requisitos
+
+    - Java 17+
+    - Maven
+    - MySQL
 
 Ejecutar:
 
-cd backend
-mvn spring-boot:run
+```bash
+    cd backend/ticket-system
+    mvn spring-boot:run
+```
+Servidor disponible en 
 
-Servidor disponible en:
+```bash
+  http://localhost:8080
+```
+## 
+**3. Frontend:**
 
-http://localhost:8080
-3. Frontend
+    Requisitos
 
-Requisitos
-
-Node.js
+    - Node.js
 
 Ejecutar:
 
-cd frontend
-npm install
-npm run dev
+```bash
+    cd frontend
+    npm install
+    npm run dev
+```
+Aplicación disponible en 
 
-Aplicación disponible en:
+```bash
+  http://localhost:5173
+```
 
-http://localhost:5173
-📷 Screenshots
-Pendientes
+## Mejoras Futuras
 
-📌 Mejoras futuras
+- Adjuntar archivos a tickets
+- Notificaciones en tiempo real
+- Dashboard con métricas
+- Paginación de tickets
+- Seguimiento estado de tickets
+- Historial de cambios de estado
+- Comentarios en tickets
+## Authors
 
-Adjuntar archivos a tickets
-
-Notificaciones en tiempo real
-
-Dashboard con métricas
-
-Paginación de tickets
-
-Deploy en cloud
-
-👨‍💻 Autor
-
-David – Full Stack Developer
-
-GitHub:
-https://github.com/davidbarbilloA
+- [@davidbarbilloa](https://github.com/davidbarbilloA)
