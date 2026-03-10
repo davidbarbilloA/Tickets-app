@@ -1,6 +1,8 @@
 package com.david.ticket_system.controller;
 
 import com.david.ticket_system.domain.enums.TicketStatus;
+import com.david.ticket_system.dto.TicketCommentDTO;
+import com.david.ticket_system.dto.TicketHistoryDTO;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.service.TicketService;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tickets")
@@ -24,13 +27,8 @@ public class TicketController {
         return ticketService.getAllTickets();
     }
 
-//    @PostMapping
-//    public TicketResponseDTO create(@RequestBody TicketRequestDTO request) {
-//        return ticketService.createTicket(request);
-//    }
-
     @GetMapping("/{id}")
-    public TicketResponseDTO getById(@PathVariable Long id){
+    public TicketResponseDTO getById(@PathVariable Long id) {
         return ticketService.getTicketById(id);
     }
 
@@ -45,26 +43,60 @@ public class TicketController {
     @PutMapping("/{id}")
     public ResponseEntity<TicketResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody TicketRequestDTO request){
+            @Valid @RequestBody TicketRequestDTO request) {
 
         TicketResponseDTO response = ticketService.updateTicket(id, request);
-
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-
         ticketService.deleteTicket(id);
-
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponseDTO> updateStatus(
             @PathVariable Long id,
-            @RequestBody TicketStatus status
-    ) {
-        return ResponseEntity.ok(ticketService.updateStatus(id, status));
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        TicketStatus status = TicketStatus.valueOf(body.get("status"));
+        return ResponseEntity.ok(ticketService.updateStatus(id, status, authentication));
+    }
+
+    // ─── Comentarios ─────────────────────────────────────────────────────────────
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<TicketCommentDTO> addComment(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        String content = body.get("content");
+        return ResponseEntity.ok(ticketService.addComment(id, content, authentication));
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<TicketCommentDTO>> getComments(@PathVariable Long id) {
+        return ResponseEntity.ok(ticketService.getComments(id));
+    }
+
+    // ─── Asignación de técnico
+    // ────────────────────────────────────────────────────
+
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<TicketResponseDTO> assignTechnician(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication) {
+        Long technicianId = ((Number) body.get("technicianId")).longValue();
+        return ResponseEntity.ok(ticketService.assignTechnician(id, technicianId, authentication));
+    }
+
+    // ─── Historial
+    // ─────────────────────────────────────────────────────────────────
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<TicketHistoryDTO>> getHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(ticketService.getHistory(id));
     }
 }

@@ -9,6 +9,8 @@ public interface UserService {
 
     List<User> getAllUsers();
 
+    List<User> getTechnicians();
+
     User getUserById(Long id);
 
     User updateUser(Long id, User user);

@@ -29,6 +29,12 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    // Listar solo técnicos
+    @GetMapping("/technicians")
+    public List<User> getTechnicians() {
+        return userService.getTechnicians();
+    }
+
     // Obtener por id
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
