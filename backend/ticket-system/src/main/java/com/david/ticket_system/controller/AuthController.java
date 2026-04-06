@@ -1,10 +1,10 @@
-package com.david.ticket_system.service;
+package com.david.ticket_system.controller;
 
 import com.david.ticket_system.dto.AuthRequest;
 import com.david.ticket_system.dto.AuthResponse;
 import com.david.ticket_system.dto.RegisterRequest;
+import com.david.ticket_system.service.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
