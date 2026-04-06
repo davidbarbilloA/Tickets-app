@@ -16,7 +16,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final String SECRET_KEY = "supersecretkeysupersecretkeysupersecretkey12345";
+    private final String SECRET_KEY = "";
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
