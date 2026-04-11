@@ -11,6 +11,7 @@ import com.david.ticket_system.dto.TicketCommentDTO;
 import com.david.ticket_system.dto.TicketHistoryDTO;
 import com.david.ticket_system.dto.TicketRequestDTO;
 import com.david.ticket_system.dto.TicketResponseDTO;
+import com.david.ticket_system.mapper.TicketMapper;
 import com.david.ticket_system.repository.TicketCommentRepository;
 import com.david.ticket_system.repository.TicketHistoryRepository;
 import com.david.ticket_system.repository.TicketRepository;
@@ -31,6 +32,7 @@ public class TicketServiceImpl implements TicketService {
         private final UserRepository userRepository;
         private final TicketCommentRepository commentRepository;
         private final TicketHistoryRepository historyRepository;
+        private final TicketMapper ticketMapper;
 
         @Override
         public TicketResponseDTO createTicket(TicketRequestDTO request, Authentication authentication) {
@@ -62,26 +64,15 @@ public class TicketServiceImpl implements TicketService {
 
                 Ticket saved = ticketRepository.save(ticket);
 
-                return mapToResponse(saved);
+                return ticketMapper.toDTO(saved);
         }
 
         @Override
         public List<TicketResponseDTO> getAllTickets() {
                 return ticketRepository.findAll()
                                 .stream()
-                                .map(this::mapToResponse)
+                                .map(ticketMapper::toDTO)
                                 .toList();
-        }
-
-        private TicketResponseDTO mapToResponse(Ticket ticket) {
-                return new TicketResponseDTO(
-                                ticket.getId(),
-                                ticket.getTitle(),
-                                ticket.getDescription(),
-                                ticket.getStatus(),
-                                ticket.getCreatedAt(),
-                                ticket.getCreator() != null ? ticket.getCreator().getEmail() : null,
-                                ticket.getAssignedTo() != null ? ticket.getAssignedTo().getEmail() : null);
         }
 
         @Override
@@ -90,7 +81,7 @@ public class TicketServiceImpl implements TicketService {
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Ticket con id " + id + " no encontrado"));
 
-                return mapToResponse(ticket);
+                return ticketMapper.toDTO(ticket);
         }
 
         @Override
@@ -106,7 +97,7 @@ public class TicketServiceImpl implements TicketService {
 
                 Ticket updated = ticketRepository.save(ticket);
 
-                return mapToResponse(updated);
+                return ticketMapper.toDTO(updated);
         }
 
         @Override
@@ -154,7 +145,7 @@ public class TicketServiceImpl implements TicketService {
                         System.err.println("Advertencia: no se pudo guardar el historial de estado: " + e.getMessage());
                 }
 
-                return mapToResponse(updated);
+                return ticketMapper.toDTO(updated);
         }
 
         // ─── Comentarios ──────────────────────────────────────────────────────────
@@ -172,8 +163,7 @@ public class TicketServiceImpl implements TicketService {
                 TicketComment commentObj = TicketComment.builder()
                                 .ticket(ticket)
                                 .author(author)
-                                .content(content)
-                                .comment(content) // Llenamos ambas para evitar el constraint error en base de datos
+                                .content(content)// Llenamos ambas para evitar el constraint error en base de datos
                                 .build();
 
                 TicketComment saved = commentRepository.save(commentObj);
@@ -240,7 +230,7 @@ public class TicketServiceImpl implements TicketService {
                                         "Advertencia: no se pudo guardar el historial de técnico: " + e.getMessage());
                 }
 
-                return mapToResponse(updated);
+                return ticketMapper.toDTO(updated);
         }
 
         // ─── Historial ────────────────────────────────────────────────────────────

@@ -30,9 +30,6 @@ public class TicketComment {
     @Column(name = "content", nullable = false, length = 2000)
     private String content;
 
-    @Column(name = "comment", nullable = false, length = 2000)
-    private String comment;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

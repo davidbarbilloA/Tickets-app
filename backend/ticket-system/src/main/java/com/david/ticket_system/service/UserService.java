@@ -1,17 +1,19 @@
 package com.david.ticket_system.service;
 
 import com.david.ticket_system.domain.entity.User;
+import com.david.ticket_system.dto.UserResponseDTO;
+
 import java.util.List;
 
 public interface UserService {
 
-    User createUser(User user);
+    UserResponseDTO createUser(User user);
 
-    List<User> getAllUsers();
+    List<UserResponseDTO> getAllUsers();
 
-    List<User> getTechnicians();
+    List<UserResponseDTO> getTechnicians();
 
-    User getUserById(Long id);
+    UserResponseDTO getUserById(Long id);
 
     User updateUser(Long id, User user);
 

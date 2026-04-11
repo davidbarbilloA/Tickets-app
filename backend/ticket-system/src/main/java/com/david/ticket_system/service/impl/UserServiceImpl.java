@@ -3,6 +3,7 @@ package com.david.ticket_system.service.impl;
 import com.david.ticket_system.domain.entity.Ticket;
 import com.david.ticket_system.domain.entity.User;
 import com.david.ticket_system.domain.enums.Role;
+import com.david.ticket_system.dto.UserResponseDTO;
 import com.david.ticket_system.repository.TicketCommentRepository;
 import com.david.ticket_system.repository.TicketHistoryRepository;
 import com.david.ticket_system.repository.TicketRepository;
@@ -32,29 +33,49 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserResponseDTO createUser(User user) {
+        return toDTO(userRepository.save(user));
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public List<User> getTechnicians() {
-        return userRepository.findByRole(Role.TECH);
+    public List<UserResponseDTO> getTechnicians() {
+        return userRepository.findByRole(Role.TECH)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public User getUserById(Long id) {
+    public UserResponseDTO getUserById(Long id) {
+        return toDTO(userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+    }
+
+    private User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    private UserResponseDTO toDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole()
+        );
+    }
+
     @Override
     public User updateUser(Long id, User user) {
-        User existingUser = getUserById(id);
+        User existingUser = findUserById(id);
         existingUser.setName(user.getName());
         existingUser.setEmail(user.getEmail());
         existingUser.setPassword(user.getPassword());

@@ -1,6 +1,7 @@
 package com.david.ticket_system.controller;
 
 import com.david.ticket_system.domain.entity.User;
+import com.david.ticket_system.dto.UserResponseDTO;
 import com.david.ticket_system.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,25 +20,25 @@ public class UserController {
 
     // Crear usuario
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public UserResponseDTO createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
     // Listar todos
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserResponseDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     // Listar solo técnicos
     @GetMapping("/technicians")
-    public List<User> getTechnicians() {
+    public List<UserResponseDTO> getTechnicians() {
         return userService.getTechnicians();
     }
 
     // Obtener por id
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
+    public UserResponseDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 
