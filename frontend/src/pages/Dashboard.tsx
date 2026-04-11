@@ -62,8 +62,11 @@ export default function Dashboard() {
                 filteredTickets = response.data.filter(t => t.creatorEmail === userEmail);
             }
             setTickets(filteredTickets);
-        } catch (error) {
-            console.error("Error fetching tickets", error);
+        } catch (error:any) {
+            if (error?.response?.status !== 401) {
+                console.error("Error fetching tickets", error);
+            }
+            throw error;
         } finally {
             setLoading(false);
         }

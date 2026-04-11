@@ -24,7 +24,7 @@ public class TicketHistory {
     private Ticket ticket;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
 
     @Column(nullable = false)
