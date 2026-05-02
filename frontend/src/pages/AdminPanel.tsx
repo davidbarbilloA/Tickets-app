@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import type { User as UserType } from "../types/user";
 import { Users, UserPlus, Trash2, Shield, Loader2, AlertCircle, X, Ticket as TicketIcon, UserCheck } from "lucide-react";
+import type { PageResponse } from "../types/page";
 
 interface Ticket {
     id: number;
@@ -57,10 +58,10 @@ export default function AdminPanel() {
         setLoadingTickets(true);
         try {
             const [ticketsRes, techsRes] = await Promise.all([
-                api.get<Ticket[]>("/tickets"),
+                api.get<PageResponse<Ticket>>("/tickets", { params: { size: 100 } }),
                 api.get<UserType[]>("/users/technicians"),
             ]);
-            setTickets(ticketsRes.data);
+            setTickets(ticketsRes.data.content);
             setTechnicians(techsRes.data);
         } catch (error) {
             console.error("Error al cargar tickets/técnicos", error);

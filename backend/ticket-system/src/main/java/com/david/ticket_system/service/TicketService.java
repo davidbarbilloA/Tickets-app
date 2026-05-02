@@ -1,5 +1,7 @@
 package com.david.ticket_system.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import com.david.ticket_system.domain.enums.TicketStatus;
 import com.david.ticket_system.dto.TicketCommentDTO;
@@ -13,7 +15,7 @@ public interface TicketService {
 
     TicketResponseDTO createTicket(TicketRequestDTO request, Authentication authentication);
 
-    List<TicketResponseDTO> getAllTickets();
+    Page<TicketResponseDTO> getAllTickets(Pageable pageable, Authentication authentication);
 
     TicketResponseDTO getTicketById(Long id);
 

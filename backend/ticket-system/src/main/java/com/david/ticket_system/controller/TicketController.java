@@ -8,6 +8,10 @@ import com.david.ticket_system.dto.TicketResponseDTO;
 import com.david.ticket_system.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +27,12 @@ public class TicketController {
     private final TicketService ticketService;
 
     @GetMapping
-    public List<TicketResponseDTO> getAll() {
-        return ticketService.getAllTickets();
+    public ResponseEntity<Page<TicketResponseDTO>> getAll(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(ticketService.getAllTickets(pageable, authentication));
     }
 
     @GetMapping("/{id}")

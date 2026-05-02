@@ -18,6 +18,8 @@ import com.david.ticket_system.repository.TicketRepository;
 import com.david.ticket_system.repository.UserRepository;
 import com.david.ticket_system.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -68,11 +70,25 @@ public class TicketServiceImpl implements TicketService {
         }
 
         @Override
-        public List<TicketResponseDTO> getAllTickets() {
-                return ticketRepository.findAll()
-                                .stream()
-                                .map(ticketMapper::toDTO)
-                                .toList();
+        public Page<TicketResponseDTO> getAllTickets(Pageable pageable, Authentication authentication) {
+                String email = authentication.getName();
+                String role = authentication.getAuthorities()
+                        .iterator()
+                        .next()
+                        .getAuthority();
+
+                Page<Ticket> ticketPage;
+                if (role.equals("ROLE_USER")) {
+                        // USER solo ve sus propios tickets
+                        ticketPage = ticketRepository.findByCreatorEmail(email, pageable);
+                } else {
+                        // TECH y ADMIN ven todos
+                        ticketPage = ticketRepository.findAll(pageable);
+                }
+
+                // Page.map() transforma cada Ticket → TicketResponseDTO
+                // preservando toda la metadata de paginación (totalElements, totalPages, etc.)
+                return ticketPage.map(ticketMapper::toDTO);
         }
 
         @Override
