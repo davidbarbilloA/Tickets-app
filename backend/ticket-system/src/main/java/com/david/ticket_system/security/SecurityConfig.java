@@ -39,6 +39,8 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/refresh").permitAll()  // ← agregar
+                        .requestMatchers("/api/auth/logout").permitAll()   // ← agregar
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/register").hasAnyRole( "ADMIN")
                         .requestMatchers("/users/**").hasAnyRole("ADMIN")
