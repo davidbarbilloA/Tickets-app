@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import type { Ticket } from "../types/ticket";
-import type { PageResponse } from "../types/page";
 import {
     Ticket as TicketIcon, LogOut, Plus, RefreshCw, Clock, CheckCircle2,
     AlertCircle, Shield, MessageSquare, Send, History, ChevronDown, ChevronUp, UserCheck
@@ -37,9 +36,6 @@ export default function Dashboard() {
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [newTicket, setNewTicket] = useState({ title: "", description: "", priority: "LOW" });
     const [submittingTicket, setSubmittingTicket] = useState(false);
-    const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
 
     // Comentarios
     const [comments, setComments] = useState<Comment[]>([]);
@@ -54,19 +50,18 @@ export default function Dashboard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchTickets(0);
+        fetchTickets();
     }, []);
 
-    const fetchTickets = async (page: number = 0) => {
+    const fetchTickets = async () => {
         setLoading(true);
         try {
-            const response = await api.get<PageResponse<Ticket>>("/tickets", {
-            params: { page, size: 10 }
-            });
-            setTickets(response.data.content);
-            setTotalPages(response.data.totalPages);
-            setTotalElements(response.data.totalElements);
-            setCurrentPage(page);
+            const response = await api.get<Ticket[]>("/tickets");
+            let filteredTickets = response.data;
+            if (userRole === "USER") {
+                filteredTickets = response.data.filter(t => t.creatorEmail === userEmail);
+            }
+            setTickets(filteredTickets);
         } catch (error:any) {
             if (error?.response?.status !== 401) {
                 console.error("Error fetching tickets", error);
@@ -80,7 +75,7 @@ export default function Dashboard() {
     const updateTicketStatus = async (ticketId: number, newStatus: string) => {
         try {
             await api.patch(`/tickets/${ticketId}/status`, { status: newStatus });
-            fetchTickets(currentPage);
+            fetchTickets();
             setIsStatusMenuOpen(null);
             if (isDetailModalOpen && selectedTicket?.id === ticketId) {
                 setSelectedTicket((prev: Ticket | null) => prev ? { ...prev, status: newStatus } : null);
@@ -98,7 +93,7 @@ export default function Dashboard() {
             await api.post("/tickets", newTicket);
             setIsCreateModalOpen(false);
             setNewTicket({ title: "", description: "", priority: "LOW" });
-            fetchTickets(currentPage);
+            fetchTickets();
         } catch (error) {
             alert("Error al crear el ticket");
         } finally {
@@ -211,7 +206,7 @@ export default function Dashboard() {
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem"
-                    }} onClick={() => fetchTickets(currentPage)}>
+                    }} onClick={fetchTickets}>
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                         Refrescar
                     </button>

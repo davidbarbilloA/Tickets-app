@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminPanel from "./pages/AdminPanel";
+import MetricsDashboard from "./pages/MetricsDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +29,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route
+          path="/metrics"
+          element={
+            <ProtectedRoute>
+              <MetricsDashboard />
             </ProtectedRoute>
           } 
         />
