@@ -1,158 +1,226 @@
+# Ticket System – Plataforma de gestión de soporte
 
-# Hola, Soy David! 👋
+Sistema full-stack para registrar, asignar y resolver incidencias entre usuarios, técnicos y administradores. Incluye autenticación JWT, control por roles, paginación, historial, comentarios y un módulo de **métricas** (Python + dashboard React).
 
+## Tech stack
 
-# Ticket System – Support Management Platform
-Sistema de gestión de tickets para registrar, asignar y resolver incidencias de soporte técnico entre usuarios y técnicos.
+| Capa | Tecnologías |
+|------|-------------|
+| **Frontend** | React 19, TypeScript, Vite, Axios, React Router, Lucide React |
+| **Backend** | Spring Boot, Spring Security, JWT, JPA/Hibernate, REST API |
+| **Base de datos** | MySQL |
+| **Analítica** | Python 3, Pandas, Matplotlib, Requests |
 
-El proyecto implementa una arquitectura full-stack con autenticación segura, control de roles y seguimiento del ciclo de vida de los tickets.
+## Estructura del proyecto
 
+```text
+App Tickets/
+├── backend/ticket-system/     # API REST (Spring Boot)
+├── frontend/                  # SPA React (Vite)
+├── python/                    # Script de métricas (no modifica backend/frontend)
+├── database/                  # Script SQL de esquema y datos iniciales
+└── README.md
+```
 
-## Tech Stack
-
-**Frontend:** React, TypeScript, Axios, Vite
-
-**Backend:** Spring Boot, Spring Security, JWT Authentication, JPA/ Hibernate, REST API
-
-**Base de Datos:** MySQL
 ## Funcionalidades
 
-- Autenticación y automatización mediante **JWT**
-- Sistema de roles **(ADMIN, TECH, USER)**
-- Creación y gestion de tickets
-- Asignación de tickets a técnicos
-- API REST segura
+- Autenticación con **JWT** y renovación mediante refresh token (cookie httpOnly)
+- Roles **ADMIN**, **TECH** y **USER**
+- CRUD de tickets con estados: `OPEN` → `IN_PROGRESS` → `RESOLVED` → `CLOSED`
+- Prioridades: `LOW`, `MEDIUM`, `HIGH`
+- Asignación de técnicos (admin)
+- **Paginación** en el dashboard (10 tickets por página)
+- **Comentarios** en tickets (TECH y ADMIN)
+- **Historial** de cambios de estado y de técnico
+- Panel de administración de usuarios
+- **Dashboard de métricas** (`/metrics`): KPIs + gráficos generados con Python
 
+## Sistema de roles y visibilidad
 
-## Arquitectura
-```text
-ticket-system
-│
-├── backend
-│   ├── config
-│   ├── controllers
-│   ├── domain
-│   ├── exceptions
-│   ├── mapper
-│   ├── services
-│   ├── repositories
-│   └── security
-│
-└── frontend
-    ├── components
-    ├── pages
-    └── services
+| Rol | Permisos principales | Tickets que ve en el dashboard |
+|-----|----------------------|--------------------------------|
+| **USER** | Crear tickets, ver detalle de los suyos | Solo los que **él creó** |
+| **TECH** | Cambiar estado, comentar | Solo los **asignados a su email** |
+| **ADMIN** | Todo lo anterior + registrar usuarios, asignar técnicos, métricas | **Todos** |
+
+Los tickets sin técnico asignado solo los gestiona el **ADMIN** (pestaña de asignaciones).
+
+## Rutas del frontend
+
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/login` | Público | Inicio de sesión |
+| `/dashboard` | Autenticado | Listado de tickets (paginado) |
+| `/metrics` | Autenticado | KPIs y gráficas de analítica |
+| `/admin` | Solo ADMIN | Usuarios y asignación de tickets |
+| `/register` | Solo ADMIN | Alta de usuarios |
+
+Desde el dashboard, el botón **Métricas** lleva a `/metrics`.
+
+## API REST (principales endpoints)
+
+### Autenticación (`/api/auth`)
+
+```http
+POST /api/auth/login
+POST /api/auth/register    # Solo ADMIN
+POST /api/auth/refresh
+POST /api/auth/logout
 ```
-## Modelo de Base de Datos
 
-Principales entidades del sistema:
+### Tickets (`/tickets`)
 
-- **users**
-- **tickets**
-- **ticket_history**
-- **ticket_comments**
+```http
+GET    /tickets?page=0&size=10     # Paginado (Spring Page)
+GET    /tickets/{id}
+POST   /tickets
+PUT    /tickets/{id}
+DELETE /tickets/{id}
+PATCH  /tickets/{id}/status        # Body: { "status": "OPEN" | "IN_PROGRESS" | ... }
+PATCH  /tickets/{id}/assign        # Body: { "technicianId": 4 }
+GET    /tickets/{id}/comments
+POST   /tickets/{id}/comments      # Body: { "content": "..." }
+GET    /tickets/{id}/history
+```
 
-Relaciones principales
+### Usuarios (`/users`) – ADMIN
+
+```http
+GET    /users
+GET    /users/technicians
+POST   /users
+PUT    /users/{id}
+DELETE /users/{id}
+```
+
+> El frontend en desarrollo usa proxy de Vite hacia `http://localhost:8080` para `/api`, `/tickets` y `/users`.
+
+## Modelo de datos
+
+Entidades principales:
+
+- `users`
+- `tickets`
+- `ticket_comments`
+- `ticket_history`
+- `refresh_tokens` (gestión de sesión)
+
+Relaciones:
 
 ```text
-User 1 ── * Tickets
+User 1 ── * Ticket (creador)
+User 1 ── * Ticket (técnico asignado, opcional)
+Ticket 1 ── * TicketComment
 Ticket 1 ── * TicketHistory
-Ticket 1 ── * TicketComments
-```
-
-Estados de tickets:
-
-```text
-OPEN → IN_PROGRESS → RESOLVED → CLOSED
-```
-## Sistema de Roles
-
-| Rol               | Permisos                | 
-| :-----------------------| :------------------ | 
-| `USER`                    | `Crear tickets`|  
-| `TECH`                    | `Gestionar y resolver tickets`|
-| `ADMIN`                   | `Administrador total del sitio`|                           
-## API Endponts
-
-#### Autenticación
-
-```http
-  POST /api/auth/login
-  POST /api/auth/register
-```
-
-#### Tickets
-
-```http
-  GET /api/tickets
-  POST /api/tickets
-  PUT /api/tickets/{id}
-  DELETE /api/tickets/{id}
-```
-#### Comentarios
-
-```http
-  POST /api/tickets/{id}/comments
-  GET /api/tickets/{id}/comments
 ```
 
 ## Instalación y ejecución
 
-**1. Clonar el repositorio**
+### 1. Clonar el repositorio
 
 ```bash
-  git clone https://github.com/davidbarbilloA/Tickets-app.git
-  cd Tickets-app
+git clone https://github.com/davidbarbilloA/Tickets-app.git
+cd Tickets-app
 ```
-## 
-**2. Backend:**
 
-    Requisitos
+### 2. Base de datos MySQL
 
-    - Java 17+
-    - Maven
-    - MySQL
-
-Ejecutar:
+1. Crear la base de datos (por ejemplo `ticket_system`).
+2. Importar el script:
 
 ```bash
-    cd backend/ticket-system
-    mvn spring-boot:run
+mysql -u root -p ticket_system < database/bd_service_tickets.sql
 ```
-Servidor disponible en 
+
+3. Configurar la conexión en el backend (`application.properties` o `application.yml` en `backend/ticket-system/src/main/resources/`), por ejemplo:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/ticket_system
+spring.datasource.username=root
+spring.datasource.password=tu_password
+spring.jpa.hibernate.ddl-auto=update
+```
+
+### 3. Backend (puerto 8080)
+
+**Requisitos:** Java 17+, Maven, MySQL en ejecución.
 
 ```bash
-  http://localhost:8080
+cd backend/ticket-system
+./mvnw spring-boot:run
 ```
-## 
-**3. Frontend:**
 
-    Requisitos
-
-    - Node.js
-
-Ejecutar:
+En Windows:
 
 ```bash
-    cd frontend
-    npm install
-    npm run dev
+mvnw.cmd spring-boot:run
 ```
-Aplicación disponible en 
+
+API disponible en: `http://localhost:8080`
+
+### 4. Frontend (puerto 5173)
+
+**Requisitos:** Node.js 18+
 
 ```bash
-  http://localhost:5173
+cd frontend
+npm install
+npm run dev
 ```
 
-## Mejoras Futuras
+App disponible en: `http://localhost:5173`
 
-- Adjuntar archivos a tickets
-- Notificaciones en tiempo real
-- Dashboard con métricas
-- Paginación de tickets
-- Seguimiento estado de tickets
-- Historial de cambios de estado
-- Comentarios en tickets
-## Authors
+### 5. Métricas con Python (opcional)
 
-- [@davidbarbilloa](https://github.com/davidbarbilloA)
+Genera `frontend/public/data/metrics.json` y las gráficas PNG a partir de la API (requiere backend activo).
+
+```bash
+cd python
+pip install -r requirements.txt
+cd ..
+python python/metrics_analyzer.py
+```
+
+Detalle en [python/README.md](python/README.md).
+
+El script usa por defecto `admin@test.com` / `123456` para autenticarse contra la API.
+
+Luego abre **Métricas** en la app o visita `http://localhost:5173/metrics`.
+
+**Salida del análisis:**
+
+- 2 endpoints REST: `/tickets` y `/users`
+- 5 filtros de negocio con Pandas `query()`
+- Agrupaciones con `groupby()`
+- 5 gráficos Matplotlib (barras, pie, líneas, scatter, boxplot)
+- Exportación a JSON y PNG para el dashboard React
+
+## Usuarios de prueba (dump SQL)
+
+| Email | Rol | Contraseña (demo) |
+|-------|-----|-------------------|
+| `admin@test.com` | ADMIN | `123456` |
+| `user@test.com` | USER | `123456` |
+| `tech1@test.com` | TECH | `123456` |
+| `tech2@test.com` | TECH | `123456` |
+
+> Si cambias contraseñas en la BD, actualiza también las credenciales en `python/metrics_analyzer.py` si usas el script de métricas.
+
+## Flujo típico de uso
+
+1. **USER** inicia sesión → crea un ticket (se asigna un técnico al azar si hay técnicos en el sistema).
+2. **ADMIN** puede reasignar técnicos en `/admin` → pestaña *Asignaciones de Tickets*.
+3. **TECH** ve solo sus tickets asignados → cambia estado y añade comentarios.
+4. Cualquier usuario autenticado puede consultar **Métricas** tras ejecutar el script Python.
+
+## Build de producción (frontend)
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+## Autor
+
+- [@davidbarbilloA](https://github.com/davidbarbilloA)
