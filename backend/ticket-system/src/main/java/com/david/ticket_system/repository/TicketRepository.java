@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
     Page<Ticket> findByCreatorEmail(String creatorEmail, Pageable pageable);
+
+    Page<Ticket> findByAssignedToEmail(String assignedToEmail, Pageable pageable);
 }

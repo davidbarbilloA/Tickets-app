@@ -79,10 +79,10 @@ public class TicketServiceImpl implements TicketService {
 
                 Page<Ticket> ticketPage;
                 if (role.equals("ROLE_USER")) {
-                        // USER solo ve sus propios tickets
                         ticketPage = ticketRepository.findByCreatorEmail(email, pageable);
+                } else if (role.equals("ROLE_TECH")) {
+                        ticketPage = ticketRepository.findByAssignedToEmail(email, pageable);
                 } else {
-                        // TECH y ADMIN ven todos
                         ticketPage = ticketRepository.findAll(pageable);
                 }
 

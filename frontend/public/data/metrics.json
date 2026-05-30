@@ -1,0 +1,29 @@
+{
+    "summary": {
+        "totalTickets": 53,
+        "openTickets": 11,
+        "inProgressTickets": 15,
+        "resolvedTickets": 15,
+        "closedTickets": 12,
+        "unassignedTickets": 2,
+        "resolutionRate": 50.94
+    },
+    "byStatus": {
+        "CLOSED": 12,
+        "IN_PROGRESS": 15,
+        "OPEN": 11,
+        "RESOLVED": 15
+    },
+    "byTech": {
+        "Sin asignar": 2,
+        "paramo@test.com": 12,
+        "tech1@test.com": 13,
+        "tech2@test.com": 16,
+        "tech3@test.com": 10
+    },
+    "byCreator": {
+        "admin@test.com": 1,
+        "user1@test.com": 25,
+        "user@test.com": 27
+    }
+}

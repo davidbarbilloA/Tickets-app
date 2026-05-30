@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import type { Ticket } from "../types/ticket";
+import type { PageResponse } from "../types/page";
 import {
     Ticket as TicketIcon, LogOut, Plus, RefreshCw, Clock, CheckCircle2,
-    AlertCircle, Shield, MessageSquare, Send, History, ChevronDown, ChevronUp, UserCheck
+    AlertCircle, Shield, MessageSquare, Send, History, ChevronDown, ChevronUp, UserCheck,
+    ChevronLeft, ChevronRight, BarChart3
 } from "lucide-react";
+
+const PAGE_SIZE = 10;
 
 interface Comment {
     id: number;
@@ -28,8 +32,10 @@ interface HistoryEntry {
 export default function Dashboard() {
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
     const [userRole] = useState(localStorage.getItem("role") || "USER");
-    const [userEmail] = useState(localStorage.getItem("userEmail") || "");
     const [isStatusMenuOpen, setIsStatusMenuOpen] = useState<number | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -50,32 +56,37 @@ export default function Dashboard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchTickets();
-    }, []);
+        fetchTickets(currentPage);
+    }, [currentPage]);
 
-    const fetchTickets = async () => {
+    const fetchTickets = async (page = currentPage) => {
         setLoading(true);
         try {
-            const response = await api.get<Ticket[]>("/tickets");
-            let filteredTickets = response.data;
-            if (userRole === "USER") {
-                filteredTickets = response.data.filter(t => t.creatorEmail === userEmail);
-            }
-            setTickets(filteredTickets);
-        } catch (error:any) {
+            const response = await api.get<PageResponse<Ticket>>("/tickets", {
+                params: { page, size: PAGE_SIZE },
+            });
+            setTickets(response.data.content);
+            setTotalPages(response.data.totalPages);
+            setTotalElements(response.data.totalElements);
+        } catch (error: any) {
             if (error?.response?.status !== 401) {
                 console.error("Error fetching tickets", error);
             }
-            throw error;
         } finally {
             setLoading(false);
+        }
+    };
+
+    const goToPage = (page: number) => {
+        if (page >= 0 && page < totalPages) {
+            setCurrentPage(page);
         }
     };
 
     const updateTicketStatus = async (ticketId: number, newStatus: string) => {
         try {
             await api.patch(`/tickets/${ticketId}/status`, { status: newStatus });
-            fetchTickets();
+            fetchTickets(currentPage);
             setIsStatusMenuOpen(null);
             if (isDetailModalOpen && selectedTicket?.id === ticketId) {
                 setSelectedTicket((prev: Ticket | null) => prev ? { ...prev, status: newStatus } : null);
@@ -93,7 +104,11 @@ export default function Dashboard() {
             await api.post("/tickets", newTicket);
             setIsCreateModalOpen(false);
             setNewTicket({ title: "", description: "", priority: "LOW" });
-            fetchTickets();
+            if (currentPage === 0) {
+                fetchTickets(0);
+            } else {
+                setCurrentPage(0);
+            }
         } catch (error) {
             alert("Error al crear el ticket");
         } finally {
@@ -187,6 +202,17 @@ export default function Dashboard() {
                     <h2 style={{ margin: 0, fontSize: "1.25rem" }} className="text-gradient">Gestor de tickets</h2>
                 </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
+                    <button style={{
+                        background: "rgba(56, 189, 248, 0.15)",
+                        border: "1px solid #38bdf8",
+                        color: "#38bdf8",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem"
+                    }} onClick={() => navigate("/metrics")}>
+                        <BarChart3 size={18} />
+                        Métricas
+                    </button>
                     {userRole === "ADMIN" && (
                         <button style={{
                             background: "rgba(192, 132, 252, 0.2)",
@@ -206,7 +232,7 @@ export default function Dashboard() {
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem"
-                    }} onClick={fetchTickets}>
+                    }} onClick={() => fetchTickets(currentPage)}>
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                         Refrescar
                     </button>
@@ -334,6 +360,57 @@ export default function Dashboard() {
                                 <p style={{ color: "#94a3b8" }}>Parece que todo está al día. Crea un nuevo ticket si necesitas ayuda.</p>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {!loading && totalPages > 1 && (
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "1rem",
+                        marginTop: "2rem",
+                        paddingTop: "1.5rem",
+                        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}>
+                        <button
+                            onClick={() => goToPage(currentPage - 1)}
+                            disabled={currentPage === 0}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.4rem",
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                opacity: currentPage === 0 ? 0.4 : 1,
+                                cursor: currentPage === 0 ? "not-allowed" : "pointer",
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                            Anterior
+                        </button>
+                        <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                            Página {currentPage + 1} de {totalPages}
+                            <span style={{ color: "#64748b", marginLeft: "0.5rem" }}>
+                                ({totalElements} tickets)
+                            </span>
+                        </span>
+                        <button
+                            onClick={() => goToPage(currentPage + 1)}
+                            disabled={currentPage >= totalPages - 1}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.4rem",
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                opacity: currentPage >= totalPages - 1 ? 0.4 : 1,
+                                cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer",
+                            }}
+                        >
+                            Siguiente
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
                 )}
             </main>
